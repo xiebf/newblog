@@ -18,6 +18,13 @@ module.exports = {
         mysqlDB.getTableInfo(data, callback);
     }
     /**
+     * 通过类型获取内容总条数
+     * @param {*} data, callback
+     */
+    ,getContentCountByType(data, callback){
+        mysqlDB.getTableCount(data, callback);
+    }
+    /**
      * 修改类型
      * @param {*} data, callback 
      */

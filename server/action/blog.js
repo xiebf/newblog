@@ -22,14 +22,42 @@ module.exports = function (app) {
             });
             return false;
         }
-        let sql = "select id, type, content, create_time, update_time from blog_content where type = ?";
-        blog.getContentByType({
-            sql: sql,
-            data: {
-                type: req.query.type
-            }
-        }, function (data) {
-            res.send(data);
+        let sql = "select id, type, content, create_time, update_time from blog_content where type = ? limit ?,?";
+        let size = req.query.size ? req.query.size : 10;
+        let page = req.query.page ? req.query.page : 1;
+        let p1 = new Promise((resolve, reject) => {
+            blog.getContentByType({
+                sql: sql,
+                data: [
+                    req.query.type,
+                    (page - 1)*size,
+                    parseInt(size)
+                ]
+            }, function (data) {
+                resolve(data);
+            });
+        });
+        let countSql = "select count(*) as total from blog_content where type = ?";
+        let p2 = new Promise((resolve, reject) => {
+            blog.getContentCountByType({
+                sql: countSql,
+                data: [req.query.type]
+            }, function (data) {
+                resolve(data);
+            });
+        });
+        Promise.all([p1, p2]).then((data) => {
+            let d1 = data[0], d2 = data[1];
+            res.send({
+                status: true,
+                data: d1.data,
+                total: d2[0].total
+            });
+        }).catch((err) => {
+            res.send({
+                status: false,
+                message: err
+            });
         });
     });
     /**
